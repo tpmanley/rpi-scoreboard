@@ -19,15 +19,13 @@ metadata {
 
         capability "Notification"
         capability "Actuator"
-        
-        command "clear_display"
-        command "test"
+        capability "Switch"
     }
 
     tiles {
         standardTile("displayTile", "device.display", width: 2, height: 2) {
-			state "on", label: '${name}', action: "clear_display", icon: "st.switches.light.on", backgroundColor: "#79b821", nextState: "off"
-            state "off", label: '${name}', action: "test", icon: "st.switches.light.off", backgroundColor: "#79b821", nextState: "on"
+			state "on", label: '${name}', action: "switch.off", icon: "st.switches.light.on", backgroundColor: "#79b821", nextState: "off"
+            state "off", label: '${name}', action: "switch.on", icon: "st.switches.light.off", backgroundColor: "#79b821", nextState: "on"
         }
         main(["displayTile"])
         details(["displayTile"])
@@ -39,13 +37,16 @@ def deviceNotification(msg) {
     get("/pi/display/text/${msg}")
 }
 
-def clear_display() {
-    log.trace "Clearing screen"
-    get("/pi/display/text/")
+def on() {
+    def name = device.displayName
+    log.trace "Turning on $name"
+    get("/pi/display/text/${name}")
 }
 
-def test() {
-    get("/pi/display/text/test")
+def off() {
+    def name = device.displayName
+ 	log.trace "Turning off $name"
+	get("/pi/display/text/")
 }
 
 private Integer convertHexToInt(hex) {
@@ -76,7 +77,7 @@ private get(path) {
 
     def result = new physicalgraph.device.HubAction(
             method: "GET",
-            path: path,
+            path: java.net.URLEncoder.encode(path),
             headers: [
             	HOST:getHostAddress()
             ]
